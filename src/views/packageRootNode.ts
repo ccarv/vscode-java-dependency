@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+import { ThemeIcon } from "vscode";
 import { Jdtls } from "../java/jdtls";
 import { INodeData, NodeKind } from "../java/nodeData";
 import { IPackageRootNodeData, PackageRootKind } from "../java/packageRootNodeData";
@@ -10,8 +11,8 @@ import { ExplorerNode } from "./explorerNode";
 import { FileNode } from "./fileNode";
 import { FolderNode } from "./folderNode";
 import { PackageNode } from "./packageNode";
+import { PrimaryTypeNode } from "./PrimaryTypeNode";
 import { ProjectNode } from "./projectNode";
-import { TypeRootNode } from "./typeRootNode";
 
 export class PackageRootNode extends DataNode {
 
@@ -27,15 +28,17 @@ export class PackageRootNode extends DataNode {
         const result = [];
         if (this.nodeData.children && this.nodeData.children.length) {
             this.sort();
-            this.nodeData.children.forEach((data) => {
+            this.nodeData.children.forEach((data: INodeData) => {
                 if (data.kind === NodeKind.Package) {
                     result.push(new PackageNode(data, this, this._project, this));
                 } else if (data.kind === NodeKind.File) {
                     result.push(new FileNode(data, this));
                 } else if (data.kind === NodeKind.Folder) {
                     result.push(new FolderNode(data, this, this._project, this));
-                } else if (data.kind === NodeKind.TypeRoot) {
-                    result.push(new TypeRootNode(data, this));
+                } else if (data.kind === NodeKind.PrimaryType) {
+                    if (data.metaData && data.metaData[PrimaryTypeNode.K_TYPE_KIND]) {
+                        result.push(new PrimaryTypeNode(data, this));
+                    }
                 }
             });
         }
@@ -61,12 +64,12 @@ export class PackageRootNode extends DataNode {
         }
     }
 
-    protected get iconPath(): { light: string; dark: string } {
+    protected get iconPath(): ThemeIcon {
         const data = <IPackageRootNodeData>this.nodeData;
         if (data.entryKind === PackageRootKind.K_BINARY) {
-            return ExplorerNode.resolveIconPath("jar");
+            return new ThemeIcon("file-zip");
         } else {
-            return ExplorerNode.resolveIconPath("packagefolder");
+            return new ThemeIcon("file-submodule");
         }
     }
 }
